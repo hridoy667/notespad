@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import userRoutes from './routes/user.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import noteRoutes from './routes/note.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,9 +21,11 @@ app.use(express.json());
 // Serve static files from the client directory
 app.use(express.static(path.join(__dirname, '../client')));
 
-//Routes
+//routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notes', noteRoutes);
+
 
 // Fallback to index.html for root requests
 // app.get('*', (req, res) => {

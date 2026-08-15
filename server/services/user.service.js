@@ -62,7 +62,11 @@ export const updateExistingUser = async (userId, updateData) => {
     throw new Error('User not found');
   }
 
-  return updatedUser;
+  return {
+    success: true,
+    message: 'User updated successfully',
+    updatedUser,
+  }
 };
 
 export const removeUser = async (userId) => {

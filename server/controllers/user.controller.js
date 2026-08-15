@@ -49,3 +49,28 @@ export const deleteUser = async (req, res) => {
     res.status(status).json({ message: error.message });
   }
 };
+
+export const getUsersByInterestsController = async (req, res) => {
+  try {
+    const result = await userService.getUsersByInterests();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getUserPostsAggregateController = async (req, res) => {
+  try {
+    const result = await userService.getUserPostsAggregate(req.params.id);
+    res.json(result);
+  } catch (error) {
+    const status = error.message === 'User not found' ? 404 : 500;
+    res.status(status).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

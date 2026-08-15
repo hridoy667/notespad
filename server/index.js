@@ -6,6 +6,7 @@ import { connectDB } from './config/db.js';
 import userRoutes from './routes/user.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import noteRoutes from './routes/note.routes.js';
+import postRoutes from './routes/post.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +26,7 @@ app.use(express.static(path.join(__dirname, '../client')));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notes', noteRoutes);
-
+app.use('/api/posts', postRoutes);
 
 // Fallback to index.html for root requests
 // app.get('*', (req, res) => {

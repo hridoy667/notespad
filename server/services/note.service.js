@@ -16,6 +16,7 @@ export const getUserNotes = async ({ userId, role, page = 1, limit = 10 }) => {
   const total = await Note.countDocuments(filter);
 
   return {
+    success: true,
     data: notes,
     page,
     totalPages: Math.ceil(total / limit),

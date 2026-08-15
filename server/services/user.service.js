@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
+import mongoose from 'mongoose';
 
 export const getAllUsers = async (page = 1, limit = 10) => {
   const skip = (page - 1) * limit;
@@ -75,4 +76,70 @@ export const removeUser = async (userId) => {
     throw new Error('User not found');
   }
   return { message: 'User deleted successfully' };
+};
+
+
+export const getUsersByInterests = async () => {
+  const result = await User.aggregate([
+    { $unwind: '$interests' },
+    // Group by interest name and collect basic user details
+    {
+      $group: {
+        _id: '$interests',
+        users: {
+          $push: {
+            id: '$_id',
+            name: '$name',
+            email: '$email',
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        interest: '$_id',
+        users: 1,
+        _id: 0,
+      },
+    },
+  ]);
+
+  return {
+    success: true,
+    message: 'Users grouped by interests fetch successfully',
+    data: result,
+  };
+};
+
+export const getUserPostsAggregate = async (userId) => {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new Error('Invalid user ID format');
+  }
+
+  const result = await User.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(userId) } },
+    {
+      $lookup: {
+        from: 'posts',
+        localField: '_id',
+        foreignField: 'userId',
+        as: 'userPosts',
+      },
+    },
+    {
+      $project: {
+        password: 0,
+      },
+    },
+  ]);
+
+  if (!result || result.length === 0) {
+    throw new Error('User not found');
+  }
+
+  return {
+    success: true,
+    message: 'User posts retrieved successfully',
+    data: result[0],
+  };
 };

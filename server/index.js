@@ -32,6 +32,15 @@ app.use(cors({
 
 app.use(express.json());
 
+// Health Check Route
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Backend API is live and running!',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

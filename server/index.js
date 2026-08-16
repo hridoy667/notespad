@@ -14,50 +14,49 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
-// Call DB connection
 connectDB();
 
 const app = express();
 
-// Define allowed origins
 const allowedOrigins = [
   'https://notespad-two.vercel.app',
   'http://localhost:5000',
-  'http://localhost:5173', // Vite default port
-  'http://localhost:3000', // React default port
+  'http://localhost:5173',
+  'http://localhost:3000',
   'http://127.0.0.1:5173'
 ];
 
-// Configure CORS dynamic origin checking
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow non-browser requests (Postman, mobile) OR matching origins
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`[CORS Blocked Origin]: ${origin}`);
-      callback(new Error('Blocked by CORS policy'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true,
-  optionsSuccessStatus: 204
-};
-
-// 1. MUST BE FIRST: Apply CORS middleware globally
-app.use(cors(corsOptions));
-
-// 2. Explicitly respond to preflight OPTIONS requests across all routes
-app.options('*', cors(corsOptions));
-
-app.use(express.json());
-
-// Request logging middleware for debugging on Railway logs
+// 1. HARDENED CORS CONFIGURATION
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  const origin = req.headers.origin;
+  
+  // If the request origin matches allowed list, reflect it back
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    // Fallback for non-browser clients (Postman, etc.)
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+
+  // Direct short-circuit for preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
   next();
 });
+
+// 2. Standard CORS package fallback
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+
+app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -65,12 +64,12 @@ app.use('/api/users', userRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/posts', postRoutes);
 
-// Fallback to index.html for root requests
+// Fallback to index.html
 app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/index.html'));
 });
 
-// 3. Global Error Handler (Prevents server crashes from stripping CORS headers)
+// Global Error Handler
 app.use((err, req, res, next) => {
   console.error('[Unhandled Server Error]:', err.stack || err.message || err);
   res.status(500).json({ 

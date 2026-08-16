@@ -1,5 +1,5 @@
 // Dynamic Base URL fallback
-const API_BASE = window.APP_CONFIG?.API_BASE || '/api';
+const API_BASE = window.APP_CONFIG?.API_BASE || 'https://notespad-production.up.railway.app/api';
 
 // State management helpers
 const getToken = () => localStorage.getItem('token');

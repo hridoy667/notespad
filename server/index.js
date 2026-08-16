@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors'; // 1. Imported cors package
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';    
@@ -13,13 +14,25 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
-//Call DB connection
+// Call DB connection
 connectDB();
 
 const app = express();
+
+//CORS
+app.use(cors({
+  origin: [
+    'https://notespad-two.vercel.app', // production
+    'http://localhost:5000',           // local
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json());
 
-//routes
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notes', noteRoutes);

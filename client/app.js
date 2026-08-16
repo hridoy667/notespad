@@ -44,7 +44,6 @@ function updateUI() {
   }
 }
 
-// Auth Handlers
 async function handleLogin(e) {
   e.preventDefault();
   try {
@@ -56,6 +55,7 @@ async function handleLogin(e) {
         password: document.getElementById('login-password').value,
       }),
     });
+
     const data = await res.json();
 
     if (res.ok) {
@@ -67,7 +67,9 @@ async function handleLogin(e) {
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
           role = payload.role || 'User';
-        } catch (err) {}
+        } catch (err) {
+          console.error('Failed to parse JWT payload', err);
+        }
       }
 
       setSession(token, role, name);
@@ -75,7 +77,9 @@ async function handleLogin(e) {
       alert(data.message || 'Login failed');
     }
   } catch (err) {
-    alert('Network error during login');
+    // Log the exact error to F12 Console for instant debugging
+    console.error('Login Fetch Error:', err);
+    alert(`Network error: ${err.message}`);
   }
 }
 

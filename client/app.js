@@ -1,4 +1,3 @@
-console.log("✅ app.js loaded successfully! API target:", window.APP_CONFIG?.API_BASE);
 const API_BASE = window.APP_CONFIG?.API_BASE || 'https://notespad-production.up.railway.app/api';
 
 // State management helpers

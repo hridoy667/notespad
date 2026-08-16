@@ -19,9 +19,6 @@ connectDB();
 const app = express();
 app.use(express.json());
 
-// Serve static files from the client directory
-app.use(express.static(path.join(__dirname, '../client')));
-
 //routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -29,9 +26,9 @@ app.use('/api/notes', noteRoutes);
 app.use('/api/posts', postRoutes);
 
 // Fallback to index.html for root requests
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../client/index.html'));
-// });
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/index.html'));
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

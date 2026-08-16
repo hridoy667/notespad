@@ -12,7 +12,8 @@ export const getAllUsers = async (page = 1, limit = 10) => {
     .skip(skip)
     .limit(limit);
 
-  const total = await User.countDocuments();
+  // Optimized fast count for global pagination
+  const total = await User.estimatedDocumentCount();
 
   return {
     data: users,
@@ -23,7 +24,6 @@ export const getAllUsers = async (page = 1, limit = 10) => {
 };
 
 export const getUserById = async (userId) => {
-  // Uses default _id index
   const user = await User.findById(userId).select('-password');
   if (!user) {
     throw new Error('User not found');
@@ -38,7 +38,7 @@ export const createNewUser = async (userData) => {
   }
 
   const hashedPassword = await bcrypt.hash(userData.password, 10);
-  const newUser = await User.create({
+  await User.create({
     ...userData,
     password: hashedPassword,
   });
@@ -67,7 +67,7 @@ export const updateExistingUser = async (userId, updateData) => {
     success: true,
     message: 'User updated successfully',
     updatedUser,
-  }
+  };
 };
 
 export const removeUser = async (userId) => {
@@ -78,11 +78,12 @@ export const removeUser = async (userId) => {
   return { message: 'User deleted successfully' };
 };
 
-
+// Uses userSchema.index({ interests: 1 })
 export const getUsersByInterests = async () => {
   const result = await User.aggregate([
+    // Match documents containing non-empty interests array to utilize index
+    { $match: { interests: { $exists: true, $not: { $size: 0 } } } },
     { $unwind: '$interests' },
-    // Group by interest name and collect basic user details
     {
       $group: {
         _id: '$interests',
@@ -97,20 +98,22 @@ export const getUsersByInterests = async () => {
     },
     {
       $project: {
+        _id: 0,
         interest: '$_id',
         users: 1,
-        _id: 0,
       },
     },
   ]);
 
   return {
     success: true,
-    message: 'Users grouped by interests fetch successfully',
+    message: 'Users grouped by interests fetched successfully',
     data: result,
   };
 };
 
+// --- Aggregation Scenario 2: User Posts ($lookup) ---
+// Uses postSchema.index({ userId: 1 }) for optimal $lookup join performance
 export const getUserPostsAggregate = async (userId) => {
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     throw new Error('Invalid user ID format');
@@ -120,7 +123,7 @@ export const getUserPostsAggregate = async (userId) => {
     { $match: { _id: new mongoose.Types.ObjectId(userId) } },
     {
       $lookup: {
-        from: 'posts',
+        from: 'posts', // Collection name in MongoDB
         localField: '_id',
         foreignField: 'userId',
         as: 'userPosts',
@@ -128,7 +131,18 @@ export const getUserPostsAggregate = async (userId) => {
     },
     {
       $project: {
-        password: 0,
+        _id: 1,
+        name: 1,
+        email: 1,
+        role: 1,
+        interests: 1,
+        createdAt: 1,
+        userPosts: {
+          _id: 1,
+          title: 1,
+          body: 1,
+          createdAt: 1,
+        },
       },
     },
   ]);

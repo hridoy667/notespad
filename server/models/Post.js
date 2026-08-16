@@ -6,7 +6,10 @@ const postSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { timestamps: true });
 
-// Supporting Scenario 2 Aggregation ($lookup on userId and sorted by createdAt)
-postSchema.index({ userId: 1, createdAt: -1 });
+// 1. CRITICAL: Foreign Key Index supporting Scenario 2 Aggregation ($lookup stage join)
+postSchema.index({ userId: 1 });
+
+// 2. Supports global public posts feed (paginated & sorted by createdAt)
+postSchema.index({ createdAt: -1 });
 
 export default mongoose.model('Post', postSchema);

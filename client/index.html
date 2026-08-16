@@ -1,24 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure Notes App</title>
+  <title>Notespad Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-8">
-  <h1 class="text-2xl font-bold mb-4">Notes App</h1>
 
-  <!-- Simple Auth Section -->
-  <div id="auth-section" class="mb-6 bg-white p-4 rounded shadow">
-    <input id="email" type="email" placeholder="Email" class="border p-2 mr-2">
-    <input id="password" type="password" placeholder="Password" class="border p-2 mr-2">
-    <button onclick="login()" class="bg-blue-500 text-white px-4 py-2 rounded">Login</button>
-  </div>
+<body class="bg-gray-100 min-h-screen text-gray-800">
 
-  <!-- Dynamic Content Display -->
-  <div id="app-content"></div>
+  <!-- Header -->
+  <header class="bg-white shadow p-4 flex justify-between items-center max-w-5xl mx-auto mt-4 rounded-lg">
+    <h1 class="text-xl font-bold text-blue-600">Notespad</h1>
+    <div class="flex items-center gap-4">
+      <span id="user-info" class="text-sm text-gray-600 font-medium">Not logged in</span>
+      <button id="logout-btn" onclick="logout()"
+        class="hidden text-xs bg-red-500 text-white px-3 py-1.5 rounded hover:bg-red-600">Logout</button>
+    </div>
+  </header>
 
+  <main class="max-w-5xl mx-auto mt-6 p-4 bg-white rounded-lg shadow">
+
+    <!-- Auth Section -->
+    <section id="auth-section" class="grid grid-cols-1 md:grid-cols-2 gap-8 py-4">
+      <!-- Login Form -->
+      <div>
+        <h2 class="text-lg font-bold mb-4">Login</h2>
+        <form onsubmit="handleLogin(event)" class="space-y-3">
+          <input type="email" id="login-email" placeholder="Email" required class="w-full p-2 border rounded text-sm">
+          <input type="password" id="login-password" placeholder="Password" required
+            class="w-full p-2 border rounded text-sm">
+          <button type="submit"
+            class="w-full bg-blue-600 text-white py-2 rounded text-sm font-semibold hover:bg-blue-700">Login</button>
+        </form>
+      </div>
+
+      <!-- Register Form -->
+      <div>
+        <h2 class="text-lg font-bold mb-4">Register</h2>
+        <form onsubmit="handleRegister(event)" class="space-y-3">
+          <input type="text" id="reg-name" placeholder="Full Name" required class="w-full p-2 border rounded text-sm">
+          <input type="email" id="reg-email" placeholder="Email" required class="w-full p-2 border rounded text-sm">
+          <input type="password" id="reg-password" placeholder="Password" required
+            class="w-full p-2 border rounded text-sm">
+          <select id="reg-role" class="w-full p-2 border rounded text-sm">
+            <option value="User">User</option>
+            <option value="Admin">Admin</option>
+          </select>
+          <input type="text" id="reg-interests" placeholder="Interests (comma separated)"
+            class="w-full p-2 border rounded text-sm">
+          <button type="submit"
+            class="w-full bg-green-600 text-white py-2 rounded text-sm font-semibold hover:bg-green-700">Register</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- App Section -->
+    <section id="app-section" class="hidden">
+      <!-- Navigation Tabs -->
+      <nav class="flex border-b mb-6 text-sm">
+        <button id="tab-notes" onclick="switchTab('notes')"
+          class="px-4 py-2 font-semibold border-b-2 border-blue-600 text-blue-600">Notes</button>
+        <button id="tab-posts" onclick="switchTab('posts')" class="px-4 py-2 font-semibold text-gray-500">Posts</button>
+        <button id="tab-users" onclick="switchTab('users')" class="px-4 py-2 font-semibold text-gray-500">Users
+          Directory</button>
+      </nav>
+
+      <!-- View: Notes -->
+      <div id="view-notes" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-gray-50 p-4 rounded border">
+            <h3 class="font-bold text-sm mb-2">Create Note</h3>
+            <div class="space-y-2">
+              <input type="text" id="note-title" placeholder="Note Title" class="w-full p-2 border rounded text-sm">
+              <textarea id="note-content" placeholder="Note Content"
+                class="w-full p-2 border rounded text-sm h-20"></textarea>
+              <button onclick="createNote()"
+                class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-semibold">Create</button>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 p-4 rounded border">
+            <h3 class="font-bold text-sm mb-2">Find Note by ID</h3>
+            <div class="space-y-2">
+              <div class="flex gap-2">
+                <input type="text" id="fetch-note-id" placeholder="Enter Note ID"
+                  class="w-full p-2 border rounded text-sm">
+                <button onclick="getNoteById()"
+                  class="bg-gray-700 text-white px-4 py-1.5 rounded text-xs font-semibold">Fetch</button>
+              </div>
+              <div id="note-by-id-output"
+                class="text-xs bg-white p-2 rounded border min-h-[60px] whitespace-pre-wrap text-gray-600">Click a note
+                from the list or enter ID...</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="font-bold text-sm mb-2">Your Notes</h3>
+          <div id="notes-list" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- View: Posts -->
+      <div id="view-posts" class="hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-gray-50 p-4 rounded border">
+            <h3 class="font-bold text-sm mb-2">Create Post</h3>
+            <div class="space-y-2">
+              <input type="text" id="post-title" placeholder="Post Title" class="w-full p-2 border rounded text-sm">
+              <textarea id="post-body" placeholder="Post Content"
+                class="w-full p-2 border rounded text-sm h-20"></textarea>
+              <button onclick="createPost()"
+                class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-semibold">Create</button>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 p-4 rounded border">
+            <h3 class="font-bold text-sm mb-2">Find Post by ID</h3>
+            <div class="space-y-2">
+              <div class="flex gap-2">
+                <input type="text" id="fetch-post-id" placeholder="Enter Post ID"
+                  class="w-full p-2 border rounded text-sm">
+                <button onclick="getPostById()"
+                  class="bg-gray-700 text-white px-4 py-1.5 rounded text-xs font-semibold">Fetch</button>
+              </div>
+              <div id="post-by-id-output"
+                class="text-xs bg-white p-2 rounded border min-h-[60px] whitespace-pre-wrap text-gray-600">Click a post
+                from the list or enter ID...</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="font-bold text-sm mb-2">All Posts</h3>
+          <div id="posts-list" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- View: Users Directory (Includes Integrated Aggregations) -->
+      <div id="view-users" class="hidden space-y-6">
+
+        <!-- Interest Filter Bar (Uses getInterests Aggregation Pipeline) -->
+        <div class="bg-gray-50 p-3 rounded border flex flex-wrap justify-between items-center gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-gray-700">Filter by Interest:</span>
+            <select id="interest-filter" onchange="filterUsersByInterest()"
+              class="p-1.5 border rounded text-xs bg-white min-w-[150px]">
+              <option value="ALL">All Interests</option>
+            </select>
+          </div>
+          <button onclick="loadUsers()" class="text-xs text-blue-600 hover:underline">Reset View</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- User Directory List -->
+          <div class="md:col-span-1 space-y-2">
+            <h3 class="font-bold text-sm mb-2">Users</h3>
+            <div id="users-list" class="space-y-2"></div>
+          </div>
+
+          <!-- Selected User Details + Joined Posts ($lookup Aggregation Pipeline) -->
+          <div class="md:col-span-2 bg-gray-50 p-4 rounded border min-h-[300px]">
+            <h3 class="font-bold text-sm mb-2">User Profile & Joined Posts</h3>
+            <div id="user-details-pane" class="text-xs text-gray-500">
+              Click any user on the left to trigger the MongoDB <code class="bg-gray-200 px-1 rounded">$lookup</code>
+              pipeline and retrieve their profile along with all written posts.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
+
 </html>
